@@ -1,10 +1,70 @@
-<h1>Todo リスト</h1>
+<div class="w-full max-w-3xl mx-auto">
+  <!-- 新規作成ボタン -->
+  <div class="mb-4">
+    <%= link_to "新しいタスク",
+    new_task_path,
+    class:
+      "bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block shadow-lg transition transform hover:scale-105" %>
+  </div>
+  <!-- タスクの配色 -->
+  <ul class="space-y-6">
+    <% rainbow_colors = %w[
+      bg-red-300
+      bg-orange-300
+      bg-yellow-200
+      bg-green-300
+      bg-blue-300
+      bg-indigo-300
+      bg-purple-300
+    ] %>
+    <% @tasks.each_with_index do |task, index| %>
+      <% bg_color = rainbow_colors[index % 7]
+      text_color = "text-gray-900"
+      sub_text_color = "text-gray-700"
+      button_bg = "bg-black/10 hover:bg-black/20" %>
+      <!-- タスクカード -->
+      <li
+        class="
+          <%= bg_color %> shadow-lg rounded-xl p-6 border-none
+          transform transition hover:-translate-y-1
+        "
+      >
 
-<ul>
-  <% @tasks.each do |task| %>
-    <li>
-      <%= task.title %>
-      <%= task.completed? ? "[DONE]" : "[ ]" %>
-    </li>
-  <% end %>
-</ul>
+        <div class="flex items-center gap-8 mb-2">
+          <%= form_with(model: task, method: :patch, class: "flex items-center") do |form| %>
+            <%= form.check_box :completed,
+                           onchange: "this.form.requestSubmit()",
+                           class:
+                             "h-10 w-10 text-blue-800 rounded border-none focus:ring-offset-0 focus:ring-2 focus:ring-black/20 cursor-pointer bg-black/5" %>
+          <% end %>
+
+          <h2
+            class="
+              text-2xl font-bold <%= text_color %>
+              <%= 'line-through opacity-50' if task.completed? %>
+            "
+          >
+            <%= task.title %>
+          </h2>
+        </div>
+        <!-- 作成日時 -->
+        <div class="<%= sub_text_color %> mb-6 font-medium">
+          <small><%= task.created_at.strftime("%Y/%m/%d %H:%M") %></small>
+        </div>
+        <!-- 編集・削除ボタン -->
+        <div class="flex gap-3">
+          <%= link_to "編集",
+          edit_task_path(task),
+          class:
+            "#{button_bg} #{text_color} font-bold py-2 px-4 rounded-lg text-sm transition backdrop-blur-sm" %>
+          <%= button_to "削除",
+          task,
+          method: :delete,
+          class:
+            "#{button_bg} #{text_color} font-bold py-2 px-4 rounded-lg text-sm transition backdrop-blur-sm" %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+</div>
+
