@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :task do
-    title { "タスクのタイトル" }
+    title { 'タスクのタイトル' }
     association :user
   end
 end
