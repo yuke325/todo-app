@@ -4,6 +4,14 @@ RSpec.describe 'Tasks', type: :request do
   let!(:user) { FactoryBot.create(:user) }
   let!(:task) { FactoryBot.create(:task, user: user) }
 
+  shared_examples 'バリデーションエラー' do |error_message|
+    it 'HTTPステータス 422 を返し、エラーメッセージを表示すること' do
+      subject
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(CGI.unescapeHTML(response.body)).to include(error_message)
+    end
+  end
+
   describe 'GET /tasks' do
     it 'HTTPステータス 200 を返す' do
       get tasks_path
@@ -22,7 +30,7 @@ RSpec.describe 'Tasks', type: :request do
     end
 
     it '完了済みのタスクには取り消し線が表示されること' do
-      completed_task = FactoryBot.create(:task, user: user, completed: true)
+      FactoryBot.create(:task, user: user, completed: true)
       get tasks_path
       expect(response.body).to include('line-through')
     end
@@ -53,37 +61,24 @@ RSpec.describe 'Tasks', type: :request do
 
     context '無効なパラメータの場合' do
       let(:invalid_params) { { task: { title: '' } } }
+      subject { post tasks_path, params: invalid_params }
 
-      it 'タスクを作成しないないこと' do
-        expect do
-          post tasks_path, params: invalid_params
-        end.not_to change(Task, :count)
+      it 'タスクを作成しないこと' do
+        expect { subject }.not_to change(Task, :count)
       end
 
-      it 'HTTPステータス 422 を返す' do
-        post tasks_path, params: invalid_params
-        expect(response).to have_http_status(:unprocessable_content)
-      end
-
-      it 'エラーメッセージが表示されること' do
-        post tasks_path, params: invalid_params
-        expect(CGI.unescapeHTML(response.body)).to include("Title can't be blank")
-      end
+      it_behaves_like 'バリデーションエラー', "Title can't be blank"
     end
 
     context 'タイトルが50文字を超えている場合' do
       let(:long_params) { { task: { title: 'a' * 51 } } }
+      subject { post tasks_path, params: long_params }
 
       it 'タスクを作成しないこと' do
-        expect do
-          post tasks_path, params: long_params
-        end.not_to change(Task, :count)
+        expect { subject }.not_to change(Task, :count)
       end
 
-      it 'エラーメッセージが表示されること' do
-        post tasks_path, params: long_params
-        expect(CGI.unescapeHTML(response.body)).to include('Title is too long (maximum is 50 characters)')
-      end
+      it_behaves_like 'バリデーションエラー', 'Title is too long (maximum is 50 characters)'
     end
   end
 
@@ -116,37 +111,24 @@ RSpec.describe 'Tasks', type: :request do
 
     context '無効なパラメータの場合' do
       let(:invalid_params) { { task: { title: '' } } }
+      subject { patch task_path(task), params: invalid_params }
 
       it 'タスクを更新できないこと' do
-        expect do
-          patch task_path(task), params: invalid_params
-        end.not_to(change { task.reload.title })
+        expect { subject }.not_to(change { task.reload.title })
       end
 
-      it 'HTTPステータス 422 (Unprocessable Content) を返す' do
-        patch task_path(task), params: invalid_params
-        expect(response).to have_http_status(:unprocessable_content)
-      end
-
-      it 'エラーメッセージが表示されること' do
-        patch task_path(task), params: invalid_params
-        expect(CGI.unescapeHTML(response.body)).to include("Title can't be blank")
-      end
+      it_behaves_like 'バリデーションエラー', "Title can't be blank"
     end
 
     context 'タイトルが50文字を超えている場合' do
       let(:long_params) { { task: { title: 'a' * 51 } } }
+      subject { patch task_path(task), params: long_params }
 
       it 'タスクを更新しないこと' do
-        expect do
-          patch task_path(task), params: long_params
-        end.not_to(change { task.reload.title })
+        expect { subject }.not_to(change { task.reload.title })
       end
 
-      it 'エラーメッセージが表示されること' do
-        patch task_path(task), params: long_params
-        expect(CGI.unescapeHTML(response.body)).to include('Title is too long (maximum is 50 characters)')
-      end
+      it_behaves_like 'バリデーションエラー', 'Title is too long (maximum is 50 characters)'
     end
   end
 
@@ -163,3 +145,4 @@ RSpec.describe 'Tasks', type: :request do
     end
   end
 end
+
