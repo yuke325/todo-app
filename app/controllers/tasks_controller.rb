@@ -11,7 +11,7 @@ class TasksController < ApplicationController
 
   def create
     @task = Task.new(task_params)
-    @task.user = User.first # Temporary assignment
+    @task.user = User.first || User.create!(name: "Default User", email: "default@example.com")
 
     if @task.save
       redirect_to tasks_path
